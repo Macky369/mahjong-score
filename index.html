@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>麻雀 集計表</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 16px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+      font-size: 14px;
+    }
+    th {
+      background: #eee;
+    }
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 4px;
+      font-size: 14px;
+    }
+    .controls {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+    }
+    button {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    @media (max-width: 600px) {
+      th, td {
+        font-size: 12px;
+        padding: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h1>麻雀 集計表</h1>
+
+<table id="scoreTable">
+  <thead>
+    <tr>
+      <th>局</th>
+      <th><input type="text" placeholder="プレイヤー1" /></th>
+      <th><input type="text" placeholder="プレイヤー2" /></th>
+      <th><input type="text" placeholder="プレイヤー3" /></th>
+      <th><input type="text" placeholder="プレイヤー4" /></th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+  <tfoot>
+    <tr>
+      <th>合計</th>
+      <th id="total0">0</th>
+      <th id="total1">0</th>
+      <th id="total2">0</th>
+      <th id="total3">0</th>
+    </tr>
+    <tr>
+      <th>順位</th>
+      <th id="rank0">-</th>
+      <th id="rank1">-</th>
+      <th id="rank2">-</th>
+      <th id="rank3">-</th>
+    </tr>
+  </tfoot>
+</table>
+
+<div class="controls">
+  <button onclick="addRound()">局を追加</button>
+  <button onclick="resetData()">リセット</button>
+</div>
+
+<script>
+  const tbody = document.querySelector("#scoreTable tbody");
+  const STORAGE_KEY = "mahjong_score_data";
+
+  function addRound(values = ["", "", "", ""]) {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>局</td>
+      ${values.map(v => `<td><input type="number" value="${v}" /></td>`).join("")}
+    `;
+    tbody.appendChild(row);
+    row.querySelectorAll("input").forEach(input => {
+      input.addEventListener("input", calculate);
+    });
+    calculate();
+  }
+
+  function calculate() {
+    const totals = [0, 0, 0, 0];
+    tbody.querySelectorAll("tr").forEach(row => {
+      row.querySelectorAll("input").forEach((input, i) => {
+        totals[i] += Number(input.value) || 0;
+      });
+    });
+
+    totals.forEach((t, i) => {
+      document.getElementById("total" + i).textContent = t;
+    });
+
+    const sorted = [...totals].map((v, i) => ({ v, i }))
+      .sort((a, b) => b.v - a.v);
+
+    sorted.forEach((item, rank) => {
+      document.getElementById("rank" + item.i).textContent = rank + 1;
+    });
+
+    saveData();
+  }
+
+  function saveData() {
+    const data = {
+      names: [...document.querySelectorAll("thead input")].map(i => i.value),
+      rounds: [...tbody.querySelectorAll("tr")].map(row =>
+        [...row.querySelectorAll("input")].map(i => i.value)
+      )
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function loadData() {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (!data) {
+      addRound();
+      return;
+    }
+    document.querySelectorAll("thead input").forEach((input, i) => {
+      input.value = data.names[i] || "";
+      input.addEventListener("input", saveData);
+    });
+    data.rounds.forEach(r => addRound(r));
+  }
+
+  function resetData() {
+    if (!confirm("すべてのデータをリセットしますか？")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+
+  loadData();
+</script>
+
+</body>
+</html>
