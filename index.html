@@ -98,18 +98,62 @@
   const tbody = document.querySelector("#scoreTable tbody");
   const STORAGE_KEY = "mahjong_score_data";
 
-  function addRound(values = ["", "", "", ""]) {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>局</td>
-      ${values.map(v => `<td><input type="number" value="${v}" /></td>`).join("")}
-    `;
-    tbody.appendChild(row);
-    row.querySelectorAll("input").forEach(input => {
-      input.addEventListener("input", calculate);
+function addRound(values = ["", "", "", ""]) {
+  const row = document.createElement("tr");
+  row.innerHTML = `
+    <td>局</td>
+    <td><input type="number" value="${values[0] ?? ""}" /></td>
+    <td><input type="number" value="${values[1] ?? ""}" /></td>
+    <td><input type="number" value="${values[2] ?? ""}" /></td>
+    <td><input type="number" value="${values[3] ?? ""}" /></td>
+  `;
+  tbody.appendChild(row);
+
+  const inputs = [...row.querySelectorAll("input")];
+
+  function recalcRow() {
+    // ① 全員 editable に戻す
+    inputs.forEach(input => input.readOnly = false);
+
+    // ② 前回の自動入力をリセット
+    inputs.forEach(input => {
+      if (input.dataset.auto === "true") {
+        input.value = "";
+        delete input.dataset.auto;
+      }
     });
+
+    let sum = 0;
+    let emptyIndexes = [];
+
+    // ③ 再判定
+    inputs.forEach((input, i) => {
+      if (input.value === "") {
+        emptyIndexes.push(i);
+      } else {
+        sum += Number(input.value) || 0;
+      }
+    });
+
+    // ④ 空欄が1人だけなら自動入力
+    if (emptyIndexes.length === 1) {
+      const idx = emptyIndexes[0];
+      inputs[idx].value = -sum;
+      inputs[idx].readOnly = true;
+      inputs[idx].dataset.auto = "true";
+    }
+
     calculate();
   }
+
+  inputs.forEach(input => {
+    input.addEventListener("input", recalcRow);
+  });
+
+  recalcRow();
+}
+
+
 
   function calculate() {
     const totals = [0, 0, 0, 0];
