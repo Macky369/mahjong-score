@@ -63,10 +63,11 @@
   <thead>
     <tr>
       <th>局</th>
-      <th><input type="text" placeholder="プレイヤー1" /></th>
-      <th><input type="text" placeholder="プレイヤー2" /></th>
-      <th><input type="text" placeholder="プレイヤー3" /></th>
-      <th><input type="text" placeholder="プレイヤー4" /></th>
+<th><select class="player"></select></th>
+<th><select class="player"></select></th>
+<th><select class="player"></select></th>
+<th><select class="player"></select></th>
+
     </tr>
   </thead>
   <tbody>
@@ -88,6 +89,7 @@
     </tr>
   </tfoot>
 </table>
+<button onclick="applyFavorite()">いつものメンバー</button>
 
 <div class="controls">
   <button onclick="addRound()">局を追加</button>
@@ -95,8 +97,45 @@
 </div>
 
 <script>
+const FAVORITE_SET = ["宮里", "崎山", "大屋", "野里"];
+
+const MEMBER_KEY = "mahjong_members";
+const DEFAULT_MEMBERS = [
+  "宮里",
+  "崎山",
+  "大屋",
+  "野里",
+  "黒岩",
+  "牧志",
+  "西原",
+  "島袋",
+  "伊禮"
+];
+function applyFavorite() {
+  document.querySelectorAll("select.player").forEach((select, i) => {
+    select.value = FAVORITE_SET[i] || "";
+  });
+
+  saveData();
+}
+
+function loadMembers() {
+  return JSON.parse(localStorage.getItem(MEMBER_KEY)) || DEFAULT_MEMBERS;
+}
+
   const tbody = document.querySelector("#scoreTable tbody");
   const STORAGE_KEY = "mahjong_score_data";
+function initPlayerSelects() {
+  const members = loadMembers();
+  document.querySelectorAll("select.player").forEach(select => {
+    select.innerHTML = `<option value="">未選択</option>` +
+      members.map(name => `<option value="${name}">${name}</option>`).join("");
+    select.addEventListener("change", saveData);
+  });
+}
+
+
+
 function updateRoundNames() {
   [...tbody.querySelectorAll("tr")].forEach((row, index) => {
     row.querySelector(".round-name").textContent = `${index + 1}回戦`;
@@ -187,7 +226,7 @@ function addRound(values = ["", "", "", ""]) {
 
   function saveData() {
     const data = {
-      names: [...document.querySelectorAll("thead input")].map(i => i.value),
+      names: [...document.querySelectorAll("select.player")].map(s => s.value),
       rounds: [...tbody.querySelectorAll("tr")].map(row =>
         [...row.querySelectorAll("input")].map(i => i.value)
       )
@@ -196,17 +235,27 @@ function addRound(values = ["", "", "", ""]) {
   }
 
   function loadData() {
-    const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!data) {
-      addRound();
-      return;
-    }
-    document.querySelectorAll("thead input").forEach((input, i) => {
-      input.value = data.names[i] || "";
-      input.addEventListener("input", saveData);
-    });
-    data.rounds.forEach(r => addRound(r));
+  initPlayerSelects();
+
+  const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+  if (!data) {
+    addRound();
+    return;
   }
+
+  // プレイヤー名を復元
+  document.querySelectorAll("select.player").forEach((select, i) => {
+    select.value = data.names[i] || "";
+  });
+
+  // 局データを復元
+  data.rounds.forEach(r => addRound(r));
+}
+
+
+
+
+   
 
   function resetData() {
     if (!confirm("すべてのデータをリセットしますか？")) return;
