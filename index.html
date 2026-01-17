@@ -89,14 +89,33 @@
     </tr>
   </tfoot>
 </table>
-<button onclick="applyFavorite()">いつものメンバー</button>
-<button onclick="saveGameResult()">対局結果を保存</button>
+<button onclick="toggleHistory()">対局履歴を表示</button>
 
-
-<div class="controls">
-  <button onclick="addRound()">局を追加</button>
-  <button onclick="resetData()">リセット</button>
+<div id="historyArea" style="display:none; margin-top:16px;">
+  <h2>対局履歴</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>日時</th>
+        <th>プレイヤー</th>
+        <th>合計</th>
+        <th>順位</th>
+      </tr>
+    </thead>
+    <tbody id="historyBody"></tbody>
+  </table>
 </div>
+
+<div id="mainControls">
+  <button onclick="applyFavorite()">いつものメンバー</button>
+  <button onclick="saveGameResult()">対局結果を保存</button>
+
+  <div class="controls">
+    <button onclick="addRound()">局を追加</button>
+    <button onclick="resetData()">リセット</button>
+  </div>
+</div>
+
 
 <script>
 const FAVORITE_SET = ["宮里", "崎山", "大屋", "野里"];
@@ -135,6 +154,44 @@ function initPlayerSelects() {
     select.addEventListener("change", saveData);
   });
 }
+function toggleHistory() {
+  const area = document.getElementById("historyArea");
+  const controls = document.getElementById("mainControls");
+
+  if (area.style.display === "none") {
+    renderHistory();
+    area.style.display = "block";
+    controls.style.display = "none"; // ★他のボタンを消す
+  } else {
+    area.style.display = "none";
+    controls.style.display = "block"; // ★元に戻す
+  }
+}
+
+function renderHistory() {
+  const body = document.getElementById("historyBody");
+  body.innerHTML = "";
+
+  const history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+
+  history.slice().reverse().forEach(game => {
+    const tr = document.createElement("tr");
+
+    const players = game.players.join(" / ");
+    const totals = game.totals.join(" , ");
+    const ranks = game.ranks.join(" , ");
+
+    tr.innerHTML = `
+      <td>${game.date}</td>
+      <td>${players}</td>
+      <td>${totals}</td>
+      <td>${ranks}</td>
+    `;
+
+    body.appendChild(tr);
+  });
+}
+
 
 
 
