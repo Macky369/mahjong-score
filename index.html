@@ -90,6 +90,8 @@
   </tfoot>
 </table>
 <button onclick="applyFavorite()">いつものメンバー</button>
+<button onclick="saveGameResult()">対局結果を保存</button>
+
 
 <div class="controls">
   <button onclick="addRound()">局を追加</button>
@@ -252,6 +254,43 @@ function addRound(values = ["", "", "", ""]) {
   data.rounds.forEach(r => addRound(r));
 }
 
+const HISTORY_KEY = "mahjong_game_history";
+
+function saveGameResult() {
+  const players = [...document.querySelectorAll("select.player")].map(s => s.value);
+
+  // 未選択チェック
+  if (players.includes("")) {
+    alert("未選択のプレイヤーがあります");
+    return;
+  }
+
+  const totals = [...Array(4)].map((_, i) =>
+    Number(document.getElementById("total" + i).textContent)
+  );
+
+  const ranks = [...Array(4)].map((_, i) =>
+    Number(document.getElementById("rank" + i).textContent)
+  );
+
+  const rounds = [...tbody.querySelectorAll("tr")].map(row =>
+    [...row.querySelectorAll("input")].map(i => Number(i.value) || 0)
+  );
+
+  const history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+
+  history.push({
+    date: new Date().toLocaleString(),
+    players,
+    totals,
+    ranks,
+    rounds
+  });
+
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+
+  alert("対局結果を保存しました");
+}
 
 
 
