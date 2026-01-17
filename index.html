@@ -89,10 +89,12 @@
     </tr>
   </tfoot>
 </table>
-<button onclick="toggleHistory()">対局履歴を表示</button>
+<button onclick="toggleHistory()">対局履歴を表示/戻る</button>
 
 <div id="historyArea" style="display:none; margin-top:16px;">
   <h2>対局履歴</h2>
+<button onclick="exportCSV()">CSV書き出し</button>
+
   <table>
     <thead>
       <tr>
@@ -360,6 +362,45 @@ function saveGameResult() {
   }
 
   loadData();
+function exportCSV() {
+  const history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+
+  if (history.length === 0) {
+    alert("書き出す履歴がありません");
+    return;
+  }
+
+  const header = [
+    "日時",
+    "プレイヤーA", "プレイヤーB", "プレイヤーC", "プレイヤーD",
+    "合計A", "合計B", "合計C", "合計D",
+    "順位A", "順位B", "順位C", "順位D"
+  ];
+
+  const rows = history.map(game => [
+    game.date,
+    ...game.players,
+    ...game.totals,
+    ...game.ranks
+  ]);
+
+  const csvContent = [header, ...rows]
+    .map(row => row.map(v => `"${v}"`).join(","))
+    .join("\n");
+
+ const bom = "\uFEFF";
+const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "mahjong_history.csv";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
 </script>
 
 </body>
