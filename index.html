@@ -53,6 +53,20 @@
         padding: 6px;
       }
     }
+/* 既存CSS */
+
+@media (max-width: 600px) {
+  body.mobile #historyArea.fullscreen {
+    position: fixed;
+    inset: 0;
+    background: #fff;
+    z-index: 9999;
+    padding: 16px;
+    overflow-y: auto;
+  }
+}
+
+
   </style>
 </head>
 <body>
@@ -120,6 +134,29 @@
 
 
 <script>
+function toggleHistory() {
+  const area = document.getElementById("historyArea");
+  const controls = document.getElementById("mainControls");
+  const table = document.getElementById("scoreTable");
+
+  if (window.innerWidth <= 600) {
+    document.body.classList.add("mobile");
+  }
+
+  if (area.style.display === "none") {
+    renderHistory();
+    area.style.display = "block";
+    controls.style.display = "none";
+    table.style.display = "none";
+    area.classList.add("fullscreen");
+  } else {
+    area.style.display = "none";
+    controls.style.display = "block";
+    table.style.display = "";
+    area.classList.remove("fullscreen");
+  }
+}
+
 const FAVORITE_SET = ["宮里", "崎山", "大屋", "野里"];
 
 const MEMBER_KEY = "mahjong_members";
@@ -156,19 +193,7 @@ function initPlayerSelects() {
     select.addEventListener("change", saveData);
   });
 }
-function toggleHistory() {
-  const area = document.getElementById("historyArea");
-  const controls = document.getElementById("mainControls");
 
-  if (area.style.display === "none") {
-    renderHistory();
-    area.style.display = "block";
-    controls.style.display = "none"; // ★他のボタンを消す
-  } else {
-    area.style.display = "none";
-    controls.style.display = "block"; // ★元に戻す
-  }
-}
 
 function renderHistory() {
   const body = document.getElementById("historyBody");
