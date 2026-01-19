@@ -1,432 +1,237 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>麻雀 集計表</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #f5f5f5;
-      margin: 0;
-      padding: 16px;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 16px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-      font-size: 14px;
-    }
-    th {
-      background: #eee;
-    }
-    input[type="text"],
-    input[type="number"] {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 4px;
-      font-size: 14px;
-    }
-    .controls {
-      margin-top: 12px;
-      display: flex;
-      gap: 8px;
-    }
-    button {
-      flex: 1;
-      padding: 10px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    @media (max-width: 600px) {
-      th, td {
-        font-size: 12px;
-        padding: 6px;
-      }
-    }
-/* 既存CSS */
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>麻雀 集計表</title>
+<style>
+body{
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  background:#f5f5f5;margin:0;padding:12px
+}
+h1{text-align:center;margin:8px 0}
+table{width:100%;border-collapse:collapse;background:#fff}
+th,td{border:1px solid #ccc;padding:6px;font-size:13px;text-align:center}
+th{background:#eee}
+input[type=number]{width:100%;box-sizing:border-box}
 
-@media (max-width: 600px) {
-  body.mobile #historyArea.fullscreen {
-    position: fixed;
-    inset: 0;
-    background: #fff;
-    z-index: 9999;
-    padding: 16px;
-    overflow-y: auto;
-  }
+/* 操作バー */
+#actionBar{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:6px;
+  margin:10px 0;
+}
+#actionBar button{
+  padding:8px;font-size:13px
 }
 
+#historyArea{display:none;margin-top:10px}
+#historyArea.fullscreen{
+  position:fixed;inset:0;background:#fff;
+  z-index:9999;padding:12px;overflow-y:auto
+}
 
-  </style>
+@media(min-width:700px){
+  #actionBar{grid-template-columns:repeat(4,1fr)}
+}
+</style>
 </head>
 <body>
 
 <h1>麻雀 集計表</h1>
 
 <table id="scoreTable">
-  <thead>
-    <tr>
-      <th>局</th>
+<thead>
+<tr>
+<th>回戦</th>
 <th><select class="player"></select></th>
 <th><select class="player"></select></th>
 <th><select class="player"></select></th>
 <th><select class="player"></select></th>
-
-    </tr>
-  </thead>
-  <tbody>
-  </tbody>
-  <tfoot>
-    <tr>
-      <th>合計</th>
-      <th id="total0">0</th>
-      <th id="total1">0</th>
-      <th id="total2">0</th>
-      <th id="total3">0</th>
-    </tr>
-    <tr>
-      <th>順位</th>
-      <th id="rank0">-</th>
-      <th id="rank1">-</th>
-      <th id="rank2">-</th>
-      <th id="rank3">-</th>
-    </tr>
-  </tfoot>
+</tr>
+</thead>
+<tbody></tbody>
+<tfoot>
+<tr><th>合計</th><th id="total0">0</th><th id="total1">0</th><th id="total2">0</th><th id="total3">0</th></tr>
+<tr><th>順位</th><th id="rank0">-</th><th id="rank1">-</th><th id="rank2">-</th><th id="rank3">-</th></tr>
+</tfoot>
 </table>
-<button onclick="toggleHistory()">対局履歴を表示/戻る</button>
 
-<div id="historyArea" style="display:none; margin-top:16px;">
-  <h2>対局履歴</h2>
-<button onclick="exportCSV()">CSV書き出し</button>
-
-  <table>
-    <thead>
-      <tr>
-        <th>日時</th>
-        <th>プレイヤー</th>
-        <th>合計</th>
-        <th>順位</th>
-      </tr>
-    </thead>
-    <tbody id="historyBody"></tbody>
-  </table>
-</div>
-
-<div id="mainControls">
+<!-- 操作バー -->
+<div id="actionBar">
   <button onclick="applyFavorite()">いつものメンバー</button>
-  <button onclick="saveGameResult()">対局結果を保存</button>
-
-  <div class="controls">
-    <button onclick="addRound()">局を追加</button>
-    <button onclick="resetData()">リセット</button>
-  </div>
+  <button onclick="addRound()">回戦追加</button>
+  <button onclick="saveGameResult()">保存</button>
+  <button onclick="toggleHistory()">履歴</button>
+  <button onclick="exportCSV()">CSV</button>
+  <button onclick="resetData()">リセット</button>
 </div>
 
+<div id="historyArea">
+<h2>対局履歴</h2>
+<table>
+<thead>
+<tr><th>日時</th><th>プレイヤー</th><th>合計</th><th>順位</th><th>操作</th></tr>
+</thead>
+<tbody id="historyBody"></tbody>
+</table>
+<button onclick="toggleHistory()">戻る</button>
+</div>
 
 <script>
-function toggleHistory() {
-  const area = document.getElementById("historyArea");
-  const controls = document.getElementById("mainControls");
-  const table = document.getElementById("scoreTable");
+const FAVORITE_SET=["宮里","崎山","大屋","野里"];
+const DEFAULT_MEMBERS=["宮里","崎山","大屋","野里","黒岩","牧志","西原","島袋","伊禮"];
+const STORAGE_KEY="mahjong_score_data";
+const HISTORY_KEY="mahjong_game_history";
+const tbody=document.querySelector("#scoreTable tbody");
 
-  if (window.innerWidth <= 600) {
-    document.body.classList.add("mobile");
-  }
-
-  if (area.style.display === "none") {
-    renderHistory();
-    area.style.display = "block";
-    controls.style.display = "none";
-    table.style.display = "none";
-    area.classList.add("fullscreen");
-  } else {
-    area.style.display = "none";
-    controls.style.display = "block";
-    table.style.display = "";
-    area.classList.remove("fullscreen");
-  }
+function initPlayerSelects(){
+  document.querySelectorAll("select.player").forEach(sel=>{
+    sel.innerHTML='<option value="">未選択</option>'+
+      DEFAULT_MEMBERS.map(n=>`<option>${n}</option>`).join("");
+    sel.onchange=saveData;
+  });
 }
 
-const FAVORITE_SET = ["宮里", "崎山", "大屋", "野里"];
-
-const MEMBER_KEY = "mahjong_members";
-const DEFAULT_MEMBERS = [
-  "宮里",
-  "崎山",
-  "大屋",
-  "野里",
-  "黒岩",
-  "牧志",
-  "西原",
-  "島袋",
-  "伊禮"
-];
-function applyFavorite() {
-  document.querySelectorAll("select.player").forEach((select, i) => {
-    select.value = FAVORITE_SET[i] || "";
-  });
-
+function applyFavorite(){
+  document.querySelectorAll("select.player").forEach((s,i)=>s.value=FAVORITE_SET[i]||"");
   saveData();
 }
 
-function loadMembers() {
-  return JSON.parse(localStorage.getItem(MEMBER_KEY)) || DEFAULT_MEMBERS;
-}
+function addRound(values=["","","",""]){
+  const tr=document.createElement("tr");
+  tr.innerHTML="<td></td>"+values.map(v=>`<td><input type=number value="${v}"></td>`).join("");
+  tbody.appendChild(tr);
+  const inputs=[...tr.querySelectorAll("input")];
 
-  const tbody = document.querySelector("#scoreTable tbody");
-  const STORAGE_KEY = "mahjong_score_data";
-function initPlayerSelects() {
-  const members = loadMembers();
-  document.querySelectorAll("select.player").forEach(select => {
-    select.innerHTML = `<option value="">未選択</option>` +
-      members.map(name => `<option value="${name}">${name}</option>`).join("");
-    select.addEventListener("change", saveData);
-  });
-}
-
-
-function renderHistory() {
-  const body = document.getElementById("historyBody");
-  body.innerHTML = "";
-
-  const history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
-
-  history.slice().reverse().forEach(game => {
-    const tr = document.createElement("tr");
-
-    const players = game.players.join(" / ");
-    const totals = game.totals.join(" , ");
-    const ranks = game.ranks.join(" , ");
-
-    tr.innerHTML = `
-      <td>${game.date}</td>
-      <td>${players}</td>
-      <td>${totals}</td>
-      <td>${ranks}</td>
-    `;
-
-    body.appendChild(tr);
-  });
-}
-
-
-
-
-function updateRoundNames() {
-  [...tbody.querySelectorAll("tr")].forEach((row, index) => {
-    row.querySelector(".round-name").textContent = `${index + 1}回戦`;
-  });
-}
-
-function addRound(values = ["", "", "", ""]) {
-  const row = document.createElement("tr");
-  row.innerHTML = `
-  <td class="round-name"></td>
-  <td><input type="number" value="${values[0] ?? ""}" /></td>
-  <td><input type="number" value="${values[1] ?? ""}" /></td>
-  <td><input type="number" value="${values[2] ?? ""}" /></td>
-  <td><input type="number" value="${values[3] ?? ""}" /></td>
-`;
-
-  tbody.appendChild(row);
-
-  const inputs = [...row.querySelectorAll("input")];
-
-  function recalcRow() {
-    // ① 全員 editable に戻す
-    inputs.forEach(input => input.readOnly = false);
-
-    // ② 前回の自動入力をリセット
-    inputs.forEach(input => {
-      if (input.dataset.auto === "true") {
-        input.value = "";
-        delete input.dataset.auto;
-      }
+  function recalc(){
+    inputs.forEach(i=>{
+      if(i.dataset.auto){i.value="";i.readOnly=false;delete i.dataset.auto}
     });
-
-    let sum = 0;
-    let emptyIndexes = [];
-
-    // ③ 再判定
-    inputs.forEach((input, i) => {
-      if (input.value === "") {
-        emptyIndexes.push(i);
-      } else {
-        sum += Number(input.value) || 0;
-      }
+    let sum=0,empty=[];
+    inputs.forEach((i,idx)=>{
+      if(i.value==="") empty.push(idx);
+      else sum+=Number(i.value)||0;
     });
-
-    // ④ 空欄が1人だけなら自動入力
-    if (emptyIndexes.length === 1) {
-      const idx = emptyIndexes[0];
-      inputs[idx].value = -sum;
-      inputs[idx].readOnly = true;
-      inputs[idx].dataset.auto = "true";
+    if(empty.length===1){
+      const i=inputs[empty[0]];
+      i.value=-sum;i.readOnly=true;i.dataset.auto=1;
     }
-
     calculate();
   }
-
-  inputs.forEach(input => {
-    input.addEventListener("input", recalcRow);
-  });
-
-  recalcRow();
-  updateRoundNames();
-
+  inputs.forEach(i=>i.oninput=recalc);
+  recalc(); updateRoundNames();
 }
 
+function updateRoundNames(){
+  [...tbody.rows].forEach((r,i)=>r.cells[0].textContent=`${i+1}回戦`);
+}
 
+function calculate(){
+  const totals=[0,0,0,0];
+  tbody.querySelectorAll("tr").forEach(r=>{
+    r.querySelectorAll("input").forEach((i,idx)=>totals[idx]+=Number(i.value)||0);
+  });
+  totals.forEach((v,i)=>document.getElementById("total"+i).textContent=v);
+  [...totals].map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v)
+    .forEach((o,r)=>document.getElementById("rank"+o.i).textContent=r+1);
+  saveData();
+}
 
-  function calculate() {
-    const totals = [0, 0, 0, 0];
-    tbody.querySelectorAll("tr").forEach(row => {
-      row.querySelectorAll("input").forEach((input, i) => {
-        totals[i] += Number(input.value) || 0;
-      });
-    });
+function saveData(){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify({
+    names:[...document.querySelectorAll("select.player")].map(s=>s.value),
+    rounds:[...tbody.rows].map(r=>[...r.querySelectorAll("input")].map(i=>i.value))
+  }));
+}
 
-    totals.forEach((t, i) => {
-      document.getElementById("total" + i).textContent = t;
-    });
-
-    const sorted = [...totals].map((v, i) => ({ v, i }))
-      .sort((a, b) => b.v - a.v);
-
-    sorted.forEach((item, rank) => {
-      document.getElementById("rank" + item.i).textContent = rank + 1;
-    });
-
-    saveData();
-  }
-
-  function saveData() {
-    const data = {
-      names: [...document.querySelectorAll("select.player")].map(s => s.value),
-      rounds: [...tbody.querySelectorAll("tr")].map(row =>
-        [...row.querySelectorAll("input")].map(i => i.value)
-      )
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }
-
-  function loadData() {
+function loadData(){
   initPlayerSelects();
-
-  const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
-  if (!data) {
-    addRound();
-    return;
-  }
-
-  // プレイヤー名を復元
-  document.querySelectorAll("select.player").forEach((select, i) => {
-    select.value = data.names[i] || "";
-  });
-
-  // 局データを復元
-  data.rounds.forEach(r => addRound(r));
+  const d=JSON.parse(localStorage.getItem(STORAGE_KEY));
+  if(!d){addRound();return;}
+  document.querySelectorAll("select.player").forEach((s,i)=>s.value=d.names[i]||"");
+  d.rounds.forEach(r=>addRound(r));
 }
 
-const HISTORY_KEY = "mahjong_game_history";
-
-function saveGameResult() {
-  const players = [...document.querySelectorAll("select.player")].map(s => s.value);
-
-  // 未選択チェック
-  if (players.includes("")) {
-    alert("未選択のプレイヤーがあります");
-    return;
-  }
-
-  const totals = [...Array(4)].map((_, i) =>
-    Number(document.getElementById("total" + i).textContent)
-  );
-
-  const ranks = [...Array(4)].map((_, i) =>
-    Number(document.getElementById("rank" + i).textContent)
-  );
-
-  const rounds = [...tbody.querySelectorAll("tr")].map(row =>
-    [...row.querySelectorAll("input")].map(i => Number(i.value) || 0)
-  );
-
-  const history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
-
-  history.push({
-    date: new Date().toLocaleString(),
-    players,
-    totals,
-    ranks,
-    rounds
+function saveGameResult(){
+  const history=JSON.parse(localStorage.getItem(HISTORY_KEY))||[];
+  history.unshift({
+    date:new Date().toLocaleString(),
+    names:[...document.querySelectorAll("select.player")].map(s=>s.value),
+    totals:[0,1,2,3].map(i=>document.getElementById("total"+i).textContent),
+    ranks:[0,1,2,3].map(i=>document.getElementById("rank"+i).textContent)
   });
-
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-
-  alert("対局結果を保存しました");
+  localStorage.setItem(HISTORY_KEY,JSON.stringify(history));
+  alert("保存しました");
 }
 
+function renderHistory(){
+  const body=document.getElementById("historyBody");
+  body.innerHTML="";
+  const history=JSON.parse(localStorage.getItem(HISTORY_KEY))||[];
+  history.forEach((h,i)=>{
+    body.innerHTML+=`
+<tr>
+<td>${h.date}</td>
+<td>${h.names.join(",")}</td>
+<td>${h.totals.join(",")}</td>
+<td>${h.ranks.join(",")}</td>
+<td>
+<button onclick="editHistoryDate(${i})">日付</button>
+<button onclick="deleteHistory(${i})">削除</button>
+</td>
+</tr>`;
+  });
+}
 
+function editHistoryDate(i){
+  const h=JSON.parse(localStorage.getItem(HISTORY_KEY))||[];
+  const d=prompt("日時を修正",h[i].date);
+  if(d===null)return;
+  h[i].date=d;
+  localStorage.setItem(HISTORY_KEY,JSON.stringify(h));
+  renderHistory();
+}
 
-   
+function deleteHistory(i){
+  if(!confirm("削除しますか？"))return;
+  const h=JSON.parse(localStorage.getItem(HISTORY_KEY))||[];
+  h.splice(i,1);
+  localStorage.setItem(HISTORY_KEY,JSON.stringify(h));
+  renderHistory();
+}
 
-  function resetData() {
-    if (!confirm("すべてのデータをリセットしますか？")) return;
-    localStorage.removeItem(STORAGE_KEY);
-    location.reload();
-  }
-
-  loadData();
-function exportCSV() {
-  const history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
-
-  if (history.length === 0) {
-    alert("書き出す履歴がありません");
-    return;
-  }
-
-  const header = [
-    "日時",
-    "プレイヤーA", "プレイヤーB", "プレイヤーC", "プレイヤーD",
-    "合計A", "合計B", "合計C", "合計D",
-    "順位A", "順位B", "順位C", "順位D"
-  ];
-
-  const rows = history.map(game => [
-    game.date,
-    ...game.players,
-    ...game.totals,
-    ...game.ranks
-  ]);
-
-  const csvContent = [header, ...rows]
-    .map(row => row.map(v => `"${v}"`).join(","))
-    .join("\n");
-
- const bom = "\uFEFF";
-const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
-
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "mahjong_history.csv";
+function exportCSV(){
+  const h=JSON.parse(localStorage.getItem(HISTORY_KEY))||[];
+  let csv="日時,プレイヤー,合計,順位\n";
+  h.forEach(r=>{
+    csv+=`${r.date},"${r.names.join("/")}","${r.totals.join("/")}","${r.ranks.join("/")}"\n`;
+  });
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="mahjong_history.csv";
   a.click();
-
-  URL.revokeObjectURL(url);
 }
 
-</script>
+function toggleHistory(){
+  const a=document.getElementById("historyArea");
+  const t=document.getElementById("scoreTable");
+  const b=document.getElementById("actionBar");
+  if(a.style.display==="none"||a.style.display===""){
+    renderHistory();a.style.display="block";t.style.display="none";b.style.display="none";a.classList.add("fullscreen");
+  }else{
+    a.style.display="none";t.style.display="";b.style.display="";a.classList.remove("fullscreen");
+  }
+}
 
+function resetData(){
+  if(confirm("すべて削除しますか？")){
+    localStorage.clear();location.reload();
+  }
+}
+
+loadData();
+</script>
 </body>
 </html>
