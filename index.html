@@ -7,7 +7,7 @@
 <style>
 body{
   font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
-  background:#f5f5f5;margin:0;padding:12px
+  background:#f5f5f5;margin:0;padding:12px;
 }
 h1{text-align:center;margin:8px 0}
 table{width:100%;border-collapse:collapse;background:#fff}
@@ -23,17 +23,43 @@ input[type=number]{width:100%;box-sizing:border-box}
   margin:10px 0;
 }
 #actionBar button{
-  padding:8px;font-size:13px
+  padding:8px;font-size:13px;
 }
 
 #historyArea{display:none;margin-top:10px}
 #historyArea.fullscreen{
   position:fixed;inset:0;background:#fff;
-  z-index:9999;padding:12px;overflow-y:auto
+  z-index:9999;padding:12px;overflow-y:auto;
 }
 
 @media(min-width:700px){
-  #actionBar{grid-template-columns:repeat(4,1fr)}
+  #actionBar{grid-template-columns:repeat(4,1fr);}
+}
+
+/* タブレット用（iPad縦向きだけ） */
+@media screen and (min-width: 700px) and (max-width: 1024px) and (orientation: portrait) {
+  h1 {
+    font-size: 50px;     /* タイトルをかなり大きく */
+    margin: 16px 0;
+  }
+
+  body {
+    font-size: 18px;
+  }
+
+  th, td {
+    font-size: 18px;
+    padding: 10px;
+  }
+
+  input {
+    font-size: 18px;
+  }
+
+  button {
+    font-size: 18px;
+    padding: 10px 14px;
+  }
 }
 </style>
 </head>
