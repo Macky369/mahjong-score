@@ -251,9 +251,11 @@ function toggleHistory(){
   }
 }
 
+// 修正版リセット：履歴は消さずにゲーム中のスコアだけリセット
 function resetData(){
-  if(confirm("すべて削除しますか？")){
-    localStorage.clear();location.reload();
+  if(confirm("現在のゲームデータをリセットしますか？\n※履歴は消えません")){
+    localStorage.removeItem(STORAGE_KEY); // ゲーム中データだけ削除
+    location.reload();
   }
 }
 
